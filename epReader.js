@@ -12,6 +12,8 @@ export class EPReader {
         let version = bytes[0];
         if (version == 2) {
             return this.getFromV2(bytes);
+        } else if (version == 1) {
+            return this.getFromV1(bytes);
         }
         return null;
     }
@@ -35,5 +37,19 @@ export class EPReader {
         let expireDate = ByteConverter.toDate(bytes.slice(63, 65));
 
         return { version: 2, enp, surname, name1, name2, sex, birthDate, expireDate };
+    }
+    
+    getFromV1(bytes) {
+        let enp = this.toUInt64(bytes.slice(1, 9)).toString().padStart(16, '0');
+        let names = this.toString(bytes.slice(9, 51).reverse());
+        let [surname, name1, name2] = [null, null, null];
+        if (names)
+            [name2, surname, name1] = names.trim().split('').reverse().join('').split('|');
+
+        let sex = bytes[51];
+        let birthDate = this.toDate(bytes.slice(52, 54));
+        let expireDate = this.toDate(bytes.slice(54, 56));
+
+        return { version: 1, enp, surname, name1, name2, sex, birthDate, expireDate };
     }
 }
